@@ -2,13 +2,18 @@ import threading
 from collections import defaultdict
 import random
 
+from generate_graph import *
+
 import matplotlib.pyplot as plt
 import networkx as nx
+import numpy as numpy
 
 
 def main():
-    graph = nx.erdos_renyi_graph(50, .25)
-    sis(graph, 0, 25, set())
+    create_graphs()
+
+    # graph = nx.erdos_renyi_graph(50, .25)
+    # sis(graph, 0, 25, set())
 
     # random_network = 'ER'
     # ba_network = 'BA'
