@@ -1,6 +1,7 @@
 import threading
 from collections import defaultdict
 import random
+from animation import *
 
 from generate_graph import *
 
@@ -10,7 +11,7 @@ import numpy as numpy
 
 
 def main():
-    create_graphs()
+    animate()
 
     # graph = nx.erdos_renyi_graph(50, .25)
     # sis(graph, 0, 25, set())
@@ -175,6 +176,11 @@ def sir(graph, disease, patient_zero, immune_group):
 def infected_roller():
     random_num = random.randint(0, 100) % 2
     return random_num
+
+def set_global_stuff():
+    graph = nx.erdos_renyi_graph(15, .25)
+    frames = 100
+    return graph, frames
 
 
 if __name__ == '__main__':
