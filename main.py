@@ -1,186 +1,195 @@
 import threading
 from collections import defaultdict
 import random
-from animation import *
+import numpy
+import copy
+import sys
 
-from generate_graph import *
-
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as numpy
 
+max_iterations = 180
 
 def main():
-    animate()
+    if len(sys.argv) != 2:
+        print("you forgot the network type: er rc ba")
+        return
 
-    # graph = nx.erdos_renyi_graph(50, .25)
-    # sis(graph, 0, 25, set())
+    run_simulation(sys.argv[1], 0, 0, 0.1,)
+    #run_simulation("ba", 0, 0, 0.1,)
 
-    # random_network = 'ER'
-    # ba_network = 'BA'
-    # rc_network = 'RC'
-    # array = 0
-    #
-    # thread1 = threading.Thread(target=run_simulation, args=(random_network, 0, array,))
-    # thread2 = threading.Thread(target=run_simulation, args=(ba_network, 0, array,))
-    # thread3 = threading.Thread(target=run_simulation, args=(rc_network, 0, array,))
-    #
-    # thread1.start()
-    # thread2.start()
-    # thread3.start()
-    #
-    # thread1.join()
-    # thread2.join()
-    # thread3.join()
-
-
-def run_simulation(network_type, disease, patient_zero):
+def run_simulation(network_type, disease, patient_zero, vaccination_percentage):
     num_simulations = 10
     network_array = []
-    empty_dict = defaultdict(int)
-
-    immune_group_random = defaultdict(int)
-    immune_group_friend = defaultdict(int)
-    immune_group_bc = defaultdict(int)
-    immune_group_hd = defaultdict(int)
-    vac_count = 0
-
-    for x in range(1, num_simulations):
+    
+    immune_group_none = set()
+    immune_group_random = set()
+    immune_group_friend = set()
+    immune_group_bc = set()
+    immune_group_hd = set()
+  
+    for x in range(0, num_simulations):
         network_array.append(load_graph_file(network_type + str(x) + '.gml'))
 
+    count=0
+
     for graph in network_array:
-        thread1_graph = threading.Thread(target=random_vaccination, args=(graph, vac_count, immune_group_random,))
-        thread2_graph = threading.Thread(target=friend_vaccination, args=(graph, vac_count, immune_group_friend,))
-        thread3_graph = threading.Thread(target=bc_vaccination, args=(graph, vac_count, immune_group_bc,))
-        thread4_graph = threading.Thread(target=hd_vaccination, args=(graph, vac_count, immune_group_hd,))
+        count += 1
+        #random_vaccination(graph, vaccination_percentage, immune_group_random)
+        #friend_vaccination(graph, vaccination_percentage, immune_group_friend)
+        bc_vaccination(graph, vaccination_percentage, immune_group_bc)
+        #hd_vaccination(graph, vaccination_percentage, immune_group_hd)
 
-        thread1_graph.start()
-        thread2_graph.start()
-        thread3_graph.start()
-        thread4_graph.start()
-
-        thread1_graph.join()
-        thread2_graph.join()
-        thread3_graph.join()
-        thread4_graph.join()
-
-        thread1 = threading.Thread(target=sir, args=(graph, disease, patient_zero, empty_dict,))
-        thread2 = threading.Thread(target=sir, args=(graph, disease, patient_zero, immune_group_random,))
-        thread3 = threading.Thread(target=sir, args=(graph, disease, patient_zero, immune_group_friend,))
-        thread4 = threading.Thread(target=sir, args=(graph, disease, patient_zero, immune_group_bc,))
-        thread5 = threading.Thread(target=sir, args=(graph, disease, patient_zero, immune_group_hd,))
-        thread6 = threading.Thread(target=sis, args=(graph, disease, patient_zero, empty_dict,))
-        thread7 = threading.Thread(target=sis, args=(graph, disease, patient_zero, immune_group_random,))
-        thread8 = threading.Thread(target=sis, args=(graph, disease, patient_zero, immune_group_friend,))
-        thread9 = threading.Thread(target=sis, args=(graph, disease, patient_zero, immune_group_bc,))
-        thread10 = threading.Thread(target=sis, args=(graph, disease, patient_zero, immune_group_hd,))
-
-        thread1.start()
-        thread2.start()
-        thread3.start()
-        thread4.start()
-        thread5.start()
-        thread6.start()
-        thread7.start()
-        thread8.start()
-        thread9.start()
-        thread10.start()
-
-        thread1.join()
-        thread2.join()
-        thread3.join()
-        thread4.join()
-        thread5.join()
-        thread6.join()
-        thread7.join()
-        thread8.join()
-        thread9.join()
-        thread10.join()
-
+        #sir(graph, disease, patient_zero, immune_group_none,str(network_type)+"-none-"+str(count))
+        #sir(graph, disease, patient_zero, immune_group_random,str(network_type)+"-random-"+str(count))
+        #sir(graph, disease, patient_zero, immune_group_friend,str(network_type)+"-friend-"+str(count))
+        sir(graph, disease, patient_zero, immune_group_bc,str(network_type)+"-bc-"+str(count))
+        #sir(graph, disease, patient_zero, immune_group_hd,str(network_type)+"-hd-"+str(count))
+        #sis(graph, disease, patient_zero, immune_group_none,str(network_type)+"-none-"+str(count))
+        #sis(graph, disease, patient_zero, immune_group_random,str(network_type)+"-random-"+str(count))
+        #sis(graph, disease, patient_zero, immune_group_friend,str(network_type)+"-friend-"+str(count))
+        sis(graph, disease, patient_zero, immune_group_bc,str(network_type)+"-bc-"+str(count))
+        #sis(graph, disease, patient_zero, immune_group_hd,str(network_type)+"-hd-"+str(count))
 
 def load_graph_file(file_name):
-    with open(file_name):
-        return 0
+    with open("data/"+file_name) as file:
+        graph = nx.parse_gml(file)
+        file.close()
+        return graph
+
+def random_vaccination(graph, vaccination_percentage, immune_group):
+    while len(immune_group) < vaccination_percentage * graph.number_of_nodes():
+        immune_group.add(random.randint(0, graph.number_of_nodes()))
+
+def friend_vaccination(graph, vaccination_percentage, immune_group):
+    while len(immune_group) < vaccination_percentage * graph.number_of_nodes():
+        node = random.randint(0,graph.number_of_nodes()-1)
+        neighbors = list(graph.neighbors(str(node)))
+        friend = neighbors[random.randint(0,len(neighbors)-1)]
+        immune_group.add(friend)
 
 
-def no_vaccination(graph):
-    immune_group = defaultdict(int)
+def bc_vaccination(graph, vaccination_percentage, immune_group):
 
-    return immune_group
+    betweeness_centrality = nx.betweenness_centrality(graph,2000)
 
+    s = [(k, betweeness_centrality[k]) for k in sorted(betweeness_centrality, key=betweeness_centrality.get, reverse=True)]
 
-def random_vaccination(graph):
-    immune_group = defaultdict(int)
-
-    return immune_group
-
-
-def friend_vaccination(graph):
-    immune_group = defaultdict(int)
-
-    return immune_group
+    for node in s:
+        immune_group.add(node[0])
+        if len(immune_group) >= vaccination_percentage * graph.number_of_nodes():
+            return
 
 
-def bc_vaccination(graph):
-    immune_group = defaultdict(int)
+    #while len(immune_group) < vaccination_percentage * graph.number_of_nodes():
+    #    betweeness_centrality = nx.betweenness_centrality(graph_copy,2000)
+    #    current_max = -1
+    #    for node, bc in betweeness_centrality.items():
+    #        if bc > current_max:
+    #            current_node = node
+    #            current_max = bc
+    #    immune_group.add(current_node)
+    #    graph_copy.remove_node(current_node)
+    #    print(vaccination_percentage * graph.number_of_nodes()-len(immune_group))
 
-    return immune_group
+    return 0
 
+def hd_vaccination(graph, vaccination_percentage, immune_group):
+    
+    graph_copy = copy.deepcopy(graph)
 
-def hd_vaccination(graph):
-    immune_group = defaultdict(int)
+    while len(immune_group) < vaccination_percentage * graph.number_of_nodes():
+        current_max = -1
+        for node in graph_copy.nodes():
+            if graph_copy.degree(node) > current_max:
+                current_node = node
+                current_max = graph_copy.degree(current_node)
+        immune_group.add(current_node)
+        graph_copy.remove_node(current_node)
 
-    return immune_group
+    return 0
 
+def sis(graph, disease, patient_zero, immune_group, output_filename):
+    
+    print("Beginning " + output_filename + "-sis.csv")
 
-def sis(graph, disease, patient_zero, immune_group):
+    output = open("results/"+output_filename+"-sis.csv","w")
+    
+    output.write("Current infected count,Newly infected count,Newly Susceptible,Total Immune\n1,0,0,"+str(len(immune_group))+"\n")
+
     infected_group = {patient_zero}
 
-    while len(infected_group) > 0:
-        temp = []
-        for node in infected_group:
-            for neighbor in list(graph.neighbors(node)):
-                if infected_roller() == 0:
-                    temp.append(neighbor)
+    iteration_count = 0
 
-        for node in infected_group:
-            if infected_roller() == 1:
-                infected_group.remove(node)
+    while len(infected_group) > 0 and iteration_count < max_iterations:
+        iteration_count += 1
+        newly_infected = spread_disease(disease, infected_group, immune_group, graph)
+        recovered = attempt_recovery(disease, infected_group)
 
-        for x in range(len(temp)):
-            infected_group.add(temp[x])
+        for x in range(len(recovered)):
+            infected_group.remove(recovered[x])
+
+        for x in newly_infected:
+            infected_group.add(x)
+
+        output.write(str(len(infected_group)) +"," + str(len(newly_infected)) + ","+str(len(recovered))+","+str(len(immune_group))+"\n")
+
+    print("Done with " + output_filename + "-sis.csv")
+
+    return 0
+
+def sir(graph, disease, patient_zero, immune_group, output_filename):
+    
+    immune_group_copy = copy.deepcopy(immune_group)
+
+    print("Beginning " + output_filename + "-sir.csv")
+    
+    infected_group = {patient_zero}
+
+    output = open("results/"+output_filename+"-sir.csv", "w")
+
+    output.write("Current infected count,Newly infected count,Recovered,Total Immune Count\n1,0,0,"+str(len(immune_group_copy))+"\n")
+
+    iteration_count = 0
+
+    while len(infected_group) > 0 and iteration_count < max_iterations:
+        iteration_count += 1
+        newly_infected = spread_disease(disease, infected_group, immune_group_copy, graph)
+        recovered = attempt_recovery(disease, infected_group)        
+
+        for x in range(len(recovered)):
+            immune_group_copy.add(recovered[x])
+            infected_group.remove(recovered[x])
+
+        for x in newly_infected:
+            infected_group.add(x)
+
+        output.write(str(len(infected_group))+","+str(len(newly_infected))+","+str(len(recovered))+"," + str(len(immune_group_copy))+ "\n")
+
+    
+    print("Done with " + output_filename + "-sir.csv")
 
     return 0
 
 
-def sir(graph, disease, patient_zero, immune_group):
-    infected_group = {patient_zero}
+def spread_disease(disease, infected_group, immune_group, graph):
+    temp = set()
+    for node in infected_group:
+        for neighbor in list(graph.neighbors(str(node))):
+            if neighbor not in infected_group and neighbor not in immune_group:
+                if infected_roller(disease) >= 0:
+                    temp.add(neighbor)
+    return temp
 
-    while len(infected_group) > 0:
-        temp = []
-        for node in infected_group:
-            for neighbor in list(graph.neighbors(node)):
-                if infected_roller() == 0:
-                    temp.append(neighbor)
+def attempt_recovery(disease, infected_group):
+    recovered = []
+    for node in infected_group:
+        if infected_roller(disease) < 0:
+            recovered.append(node)
+    return recovered
 
-        for node in infected_group:
-            if infected_roller() == 1:
-                infected_group.remove(node)
-                immune_group.add(node)
-
-        for x in range(len(temp)):
-            infected_group.add(temp[x])
-    return 0
-
-
-def infected_roller():
-    random_num = random.randint(0, 100) % 2
-    return random_num
-
-def set_global_stuff():
-    graph = nx.erdos_renyi_graph(15, .25)
-    frames = 100
-    return graph, frames
+def infected_roller(disease):
+    return numpy.random.normal(disease, 1)
 
 
 if __name__ == '__main__':
