@@ -4,42 +4,34 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.colors as color
 from matplotlib.animation import FuncAnimation
-from main import set_global_stuff
+from main import run_simulation
 
 color_map = ['g', 'y', 'r', 'b', 'm', 'k']
-# green
-# yellow
+# green not infected
+# yellow newly_infected
 # red
-# blue
-# purple
+# blue  recovered
+# purple immune
 plt.figure(figsize=(10, 10))
 # number of nodes
 # generate graph
-G, size = set_global_stuff()
-size = G.number_of_nodes() * len(color_map)
+
+# return animation_bc_sir, ba, len(animation_bc_sir)
+color_rules, G, size = run_simulation('rc', 0, 0, 0.1, )
 
 # generating input frames here, since my data is too big
 # its important that the frames go as input and is not generated
 # on the fly
 colors = list()
 count = 0
-for k in range(size):
-    for i in range(len(color_map)):
-        for j in range(G.number_of_nodes()):
-            frame_colors = list()
-            for x in range(G.number_of_nodes()):
-                if count >= x:
-                    random_color = color_map[i]
-                    node = color.to_hex(random_color)
-                    frame_colors.append(node)
-                else:
-                    random_color = color_map[5]
-                    node = color.to_hex(random_color)
-                    frame_colors.append(node)
-            colors.append(frame_colors)
-            count = count + 1
-            if count >= G.number_of_nodes():
-                count = 0
+for x in range(size):
+    frame_colors = list()
+    length = len(color_rules[x])
+    for i in range(length):
+        node_color = color_map[color_rules[x][i]]
+        node_color = color.to_hex(node_color)
+        frame_colors.append(node_color)
+    colors.append(frame_colors)
 np_array = np.array(colors)
 frame = np_array
 for i in range(size):
@@ -66,6 +58,11 @@ def update(i):
     # instead of giving frame as input, if I randomly generate it, then it works
     nc = frame[i] # np.random.randint(2, size=200)
     nodes.set_color(nc)
+    size = []
+    for x in range(G.number_of_nodes()):
+        size.append(50)
+    size = np.array(size)
+    nodes.set_sizes(size)
     return nodes,
 
 
