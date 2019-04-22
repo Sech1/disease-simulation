@@ -16,7 +16,7 @@ def main():
         return
 
     run_simulation(sys.argv[1], 0, 0, 0.1,)
-
+    #run_simulation("ba", 0, 0, 0.1,)
 
 def run_simulation(network_type, disease, patient_zero, vaccination_percentage):
     num_simulations = 10
@@ -71,17 +71,26 @@ def friend_vaccination(graph, vaccination_percentage, immune_group):
 
 def bc_vaccination(graph, vaccination_percentage, immune_group):
 
-    graph_copy = copy.deepcopy(graph)
+    betweeness_centrality = nx.betweenness_centrality(graph,2000)
 
-    while len(immune_group) < vaccination_percentage * graph.number_of_nodes():
-        betweeness_centrality = nx.betweenness_centrality(graph_copy)
-        current_max = -1
-        for node, bc in betweeness_centrality:
-            if bc > current_max:
-                current_node = node
-                current_max = bc
-        immune_group.add(current_node)
-        graph_copy.remove_node(current_node)
+    s = [(k, betweeness_centrality[k]) for k in sorted(betweeness_centrality, key=betweeness_centrality.get, reverse=True)]
+
+    for node in s:
+        immune_group.add(node[0])
+        if len(immune_group) >= vaccination_percentage * graph.number_of_nodes():
+            return
+
+
+    #while len(immune_group) < vaccination_percentage * graph.number_of_nodes():
+    #    betweeness_centrality = nx.betweenness_centrality(graph_copy,2000)
+    #    current_max = -1
+    #    for node, bc in betweeness_centrality.items():
+    #        if bc > current_max:
+    #            current_node = node
+    #            current_max = bc
+    #    immune_group.add(current_node)
+    #    graph_copy.remove_node(current_node)
+    #    print(vaccination_percentage * graph.number_of_nodes()-len(immune_group))
 
     return 0
 
