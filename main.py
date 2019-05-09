@@ -1,8 +1,6 @@
 import copy
-import random
 import sys
 
-import networkx as nx
 import numpy as numpy
 
 from animation import *

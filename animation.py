@@ -9,7 +9,7 @@ from main import run_simulation
 color_map = ['g', 'y', 'r', 'b', 'm', 'k']
 # green not infected
 # yellow newly_infected
-# red
+# red - infected
 # blue  recovered
 # purple immune
 plt.figure(figsize=(10, 10))
@@ -70,4 +70,4 @@ def animate():
     # output animation; its important I save it
     fig = plt.gcf()
     ani = FuncAnimation(fig, update, interval=1, frames=range(size), blit=True)
-    ani.save('crap.gif', writer='imagemagick',  savefig_kwargs={'facecolor':'white'}, fps=1)
+    ani.save('animation.gif', writer='imagemagick',  savefig_kwargs={'facecolor':'white'}, fps=1)

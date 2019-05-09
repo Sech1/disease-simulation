@@ -2,6 +2,10 @@ venv/
 *.iml
 .idea/
 *.gml
+*.gif
+results/
+plots/
+data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
